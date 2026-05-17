@@ -1,32 +1,23 @@
-import argparse
-import os
-import time
-import cv2
-import mediapipe as mp
-import numpy as np
-import pickle
-from collections import deque
-from hand_highlight import parse_args, hand_main
+from hand_highlight import  hand_main
 from multiprocessing import Process,shared_memory
 
-try:
-    from sklearn.ensemble import RandomForestClassifier
-    from sklearn.model_selection import train_test_split
-    from sklearn.metrics import classification_report
-except Exception:
-    RandomForestClassifier = None
+
 
 
 def handtracking():
     
     existing_shm = shared_memory.SharedMemory(name="ai_output")
+    existing_shm2 = shared_memory.SharedMemory(name="cords")
 
     data = ""
     try:
         while True:
+            
             prevdata = data
             raw_data= bytes(existing_shm.buf[:20])
             data = raw_data.decode('utf-8').strip().strip('\x00')
+            raw_data= bytes(existing_shm2.buf[:3])
+            data = raw_data.decode('utf-8')
             if data:
                 if prevdata == data:
                     pass

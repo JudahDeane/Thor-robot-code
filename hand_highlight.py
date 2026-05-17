@@ -32,17 +32,19 @@ def parse_args():
     parser.add_argument("--record", type=str, default=None, help="Record samples for a given LABEL (single char/word). Press 's' to save a sample")
     parser.add_argument("--train", action="store_true", help="Train a classifier from recorded samples (dataset.csv -> model.pkl)")
     parser.add_argument("--model_path", type=str, default="modelnew.pkl", help="Path to save/load trained model")
-    parser.add_argument("--two_hands", action="store_true", help="Use concatenated left+right hand features (2x63 floats) for recording/training/prediction")
+    parser.add_argument("--two_hands", action="store_true", help="Use concatenated left+right hand features (2x42 floats) for recording/training/prediction")
     return parser.parse_args()
 
 
 def hand_main():
     shm = shared_memory.SharedMemory(name="ai_output", create=True, size=20)
+    shm_cords = shared_memory.SharedMemory(name="cords", create=True, size=168)
 
     args = parse_args()
 
     # Create shared memory for inter-process communication
     shm.buf[:20] = b'\x00' * 20  # Initialize with null bytes
+    shm_cords.buf[:168] = b'\x00' * 168  # Initialize hand coordinates (21 landmarks * 2 coords * 4 bytes)
 
     # Initialize MediaPipe Tasks Hand Landmarker
     model_path = "hand_landmarker.task"  # Download from https://ai.google.dev/edge/mediapipe/solutions/vision/hand_landmarker
@@ -119,11 +121,11 @@ def hand_main():
         # Build per-frame features for single or two-hand mode
         current_feature = None
 
-        # helper: convert MediaPipe hand_landmarks to a 63-float vector
+        # helper: convert MediaPipe hand_landmarks to a 42-float vector (x, y only)
         def landmarks_to_vector(hl):
             v = []
             for lm in hl:
-                v.extend([lm.x, lm.y, lm.z])
+                v.extend([lm.x, lm.y])
             return v
 
         left_vec = None
@@ -159,6 +161,11 @@ def hand_main():
                     cv2.circle(frame, pt, 2, (255, 255, 255), -1)
 
                 vec = landmarks_to_vector(hand_landmarks)
+                
+                # Write coordinates to shared memory
+                coords_bytes = np.array(vec, dtype=np.float32).tobytes()
+                shm_cords.buf[:len(coords_bytes)] = coords_bytes
+                
                 single_hand_vec = vec  # last-hand fallback
 
                 # Determine handedness
@@ -176,9 +183,9 @@ def hand_main():
 
             # Build combined feature when two_hands enabled
             if args.two_hands:
-                zeros63 = [0.0] * 63
-                left_final = left_vec if left_vec is not None else zeros63
-                right_final = right_vec if right_vec is not None else zeros63
+                zeros42 = [0.0] * 42
+                left_final = left_vec if left_vec is not None else zeros42
+                right_final = right_vec if right_vec is not None else zeros42
                 current_feature = left_final + right_final
             else:
                 current_feature = single_hand_vec
@@ -261,6 +268,12 @@ def hand_main():
         shm.unlink()
     except Exception as e:
         print(f"Error cleaning up shared memory: {e}")
+    
+    try:
+        shm_cords.close()
+        shm_cords.unlink()
+    except Exception as e:
+        print(f"Error cleaning up cords shared memory: {e}")
 
     # If training flag passed, train a classifier from dataset.csv
     if args.train:
