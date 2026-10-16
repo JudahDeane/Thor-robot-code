@@ -62,5 +62,75 @@ use a for loop for the length of coords then just apply the location of the poin
 It works lets go first Idea works
 
 
+GETTING LIKE AN AI THING
+
+TALKING 
+
+GOAL
+I am trying to get the robot to respond to me and talk back to me 
+
+Idea 1
+use the tts module called pyttsx3 to read out text to talk to the user
+
+problem
+when I run very basic code to just test it it breaks and displays and error with the librarys
+
+Idea 2 
+use a different libray called piper which creates a file and then plays it with winsound a built in thing
+
+this works
+
+GETTING AN AI MODEL TO TALK TO
+
+Idea 1
+getting a built in ollama model to send requests to with python
+
+problem
+the model needs like 32 gb of ram and i still need to run all my other stuff
+
+Idea 2 
+find a cheaper model to run on ollama
+
+problem
+finding another model is difficult so i just went back to Idea 1 
+
+Idea 1 worked
+
+I used an ollama api with python 
+
+
+VOICE RECOGNITION
+
+idea 1 
+copy the code from a previous project
+
+problem
+the code only works with the other stuff i dont need
+
+I fixed the code and found out why it was not working so now it does
+
+
+so now the speech rocgonition goes into the ai which feeds into the piper module to create audio to play 
+the average time to respond is about like 5 seconds ish 
+
+
+
+MOVING THE ROBOT
+
+Goal
+I want to be able to control the robot through a python script
+
+Idea 1 
+use a python script that i can start in windows
+
+issue is that i cant run the script from windows directly i have to run it through ubuntu
+ 
+
+
+
+
+
+
+
 
 

@@ -67,7 +67,7 @@ def hand_main():
         )
         detector = vision.HandLandmarker.create_from_options(options)
     except Exception as e:
-        print(f"ERROR: Failed to create hand detector: {e}")
+        print(f"ERROR: Failed to     create hand detector: {e}")
         return
 
     cap = cv2.VideoCapture(args.camera)
@@ -88,10 +88,11 @@ def hand_main():
     
 
     # If training requested, we'll collect features and train after the loop
-    prev_time = 0
+
+    # Prediction smoothing
     # Prediction smoothing
     pred_queue = deque(maxlen=8)
-    smoothed_label = None
+    
 
     # Prediction timing tracking
     last_prediction = None
